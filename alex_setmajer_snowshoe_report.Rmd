@@ -1,5 +1,5 @@
 ---
-title: "Snowshoe Hares"
+title: "Juvenile Snowshoe Hares, 1998-2012"
 author: "Alex Setmajer"
 date: "11/8/2021"
 output: html_document
