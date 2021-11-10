@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(tidyverse)
 library(here)
 library(lubridate)
+library(effsize)
+library(modelsummary)
 ```
 
 
@@ -41,6 +43,8 @@ hares <- read_csv(here( "data","bonanza_hares.csv"))
 ### Part 1: Annual Juvenile Hare Trap Counts
 
 ```{r, fig.cap= "<b>Figure 1. Annual Juvenile Snowshoe Hare Trappings, 1998-2012.</b> This table provides a summary of the total juvenile Snowshoe Hares trapped annually between the years of 1998-2012." }
+## change names in hares of necesary obs. and columns.
+
 hares_yr <- hares %>%
   mutate(date_new = mdy(date)) %>% 
   mutate(year_new = year(date_new))
@@ -98,8 +102,17 @@ age data only provided for 1120 out of 3197 observations, or 35% of total observ
 
 Create a finalized data visualization (or visualizations) in which you compare **juvenile hare weights by sex and site (grid)** (ignore other variables). You should include groups where these variables are not recorded (`NA`). Include finalized figure captions below your visualization(s).
 
-```{r}
+```{r, fig.cap= "text here"}
+juv_hares_w <- hares %>% 
+  select(sex, weight, grid)
 
+ggplot(data= juv_hares_w, aes(x=sex,y=weight), na.rm= FALSE)+
+  geom_count(aes(color=sex), na.rm=FALSE)+
+  facet_wrap(~grid)+
+  theme_minimal()+
+  labs(x= "Sex", y= "Weight()")
+
+## still need to refine this plot
 ```
 
 Then, in 2 - 3 sentences below your visualization(s) describe in text the main takeaways that you would want the audience to understand from your figures.
@@ -112,14 +125,46 @@ Note: There are multiple ways to visualize these comparisons. We encourage you t
 
 ### Part 3: Juvenile Weight Comparison
 
-Further compare mean weights for **juvenile male and female snowshoe hares** included in this study. In this section, you should include:
+Further compare mean weights for **juvenile male and female snowshoe hares** included in this study. 
 
-A finalized table containing the mean, standard deviation, and sample size for male and female juvenile snowshoe hares, with a table caption (remember, a table caption should be placed *above* the table in your report)
+A finalized table containing the mean, standard deviation, and sample size for male and female juvenile snowshoe hares.
+
+*Table 1. Title.* Caption here
 
 ```{r}
+juv_hares_w_m <- juv_hares_w %>% 
+  filter(sex =="m") %>% 
+  filter(weight %in% c(0:3000)) %>% 
+  pull(weight)
 
+juv_hares_w_f <- juv_hares_w %>% 
+  filter(sex == "f") %>% 
+  filter(weight %in% c(0:3000)) %>% 
+  pull(weight)
+
+juv_hares_w_mf_t <- t.test(juv_hares_w_m, juv_hares_w_f)
+juv_hares_w_mf_t
+
+juv_hares_w_mf_cohen <-cohen.d(juv_hares_w_m, juv_hares_w_f)
+juv_hares_w_mf_cohen
+
+##do QQ graph & create table
 ```
 
+
+```{r, exploratory, include = true}
+ggplot(data=juv_hares_w, aes(y=weight)) +
+  geom_histogram(aes(fill=sex), na.rm=FALSE)+
+  facet_wrap(~grid)+
+  theme_minimal()
+
+juv_hares_w_mf_ci <- t.test(juv_hares_w_mf$weight)
+juv_hares_w_mf_ci
+
+juv_hares_w_mf_sd <- sd(juv_hares_w_mf$weight)
+juv_hares_w_mf_sd
+
+```
 A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
 The actual difference in means
 Effect size (Cohen's *d*) (see effsize::cohen.d() example in the Lab 5 key)
@@ -131,7 +176,12 @@ Note: Exploratory graphs (e.g. histograms, QQ-plots) to explore assumptions of y
 
 Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
 
-```{r}
+```{r, fig.cap = "text"}
+juv_hares_hft <- hares %>% 
+  select(weight, hindft, grid)
+
+ggplot(data=juv_hares_hft, aes(x=hindft, y=weight))+
+  geom_point(aes(color=grid))
 
 ```
 
