@@ -14,15 +14,18 @@ library(tidyverse)
 library(here)
 library(lubridate)
 library(effsize)
+library(GGally)
 library(modelsummary)
+library(kableExtra)
+library(broom)
 ```
 
 
 ## Introduction
 
-ADD ___ A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
+This report explores the counts and sizes of juvenile snowshoe hares recorded at the Bonanza Creek Experimental Forest in Alaska from 1998 - 2012. It includes summaries on annual juvenile hare counts, juvenile hare weights, and explores the relationship between juvenile weight and hind foot length.
 
-In this “mini exploratory report,” you will explore the counts and sizes of juvenile snowshoe hares recorded from 1998 - 2012.
+basic background information about the subject, site and study (with citations as needed)
 
 ## Data and Analysis
 
@@ -32,18 +35,28 @@ Data citation: Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 20
 
 ADD ___ provide an overview of the main analysis, statistical methods and tools used.
 
+Per the Metadata provided by the LTER team:
+
+-weight (g)
+-hindfoot length (unit not provided)
+
+And, there are three sampling sites:
+- Site A (bonrip in original data set): Located in a flood zone along the Tanana River and Bonanza Mature is a mature black spruce forest approximately 1 km inland from the river and 2 km from the riparian plot. 
+- Site B (bonmat in original data set): Consisted of stands of mature white spruce, paper birch and alder, as well as black spruce and other plants.
+- Site C (bonbs in original data set): Located in a mature lowland black spruce stand.
+
 ```{r}
 hares <- read_csv(here( "data","bonanza_hares.csv"))
 ```
 
-
 ## Juvenile Hare Initial Investigation
+The following sections summarize data on Juvenile Snowshoe Hares based on the data provided from the LTER fieldwork. On average, data was collected quarterly each year.
 
+An important data limitation to consider while reviewing the findings is that age data has only been provided for 1120 out of 3197 observations, or 35% of total observations. Additionally, age for observed hares did not begin being collected until June 1999, and there are significant gaps throughout the years of when age is reported. Of the observations with age data, there were only 378 juveniles counted (33.75% juveniles out of those with age data, or 11.82% of total observations).This means that this report focuses on a relatively small subset of the data collected.
 
 ### Part 1: Annual Juvenile Hare Trap Counts
 
 ```{r, fig.cap= "<b>Figure 1. Annual Juvenile Snowshoe Hare Trappings, 1998-2012.</b> This table provides a summary of the total juvenile Snowshoe Hares trapped annually between the years of 1998-2012." }
-## change names in hares of necesary obs. and columns.
 
 hares_yr <- hares %>%
   mutate(date_new = mdy(date)) %>% 
@@ -82,27 +95,13 @@ ggplot(data=juv_hares_yr, aes(x=year_new, y=n, )) +
 ```
 
 
-3 - 4 sentences below your figure, describe major takeaways from your graph
+The key takeaway from Figure 1 is that there appears to be an overall trend of decreasing juvenile hare counts. While some years counted more juveniles than others, as time went on, 'high-count' years were still significantly lower than juvenile counts in the first couple years of data collected. The minimum number of juveniles counted  was 2 hares, the maximum number of juveniles was 126 hares. The mean count was approximately 32 juvenile hares, and the median was approximately 19 juvenile hares.
 
-Counts: min = 2, max = 126, mean = 31.5, median = 18.5
-
-- General/notable trends? decreasing # of juveniles.
-
-age not reported until June 1999, so no data for 1998 on age. Significant gaps throughout the years of when age is reported.
-
-
-EDIT __ These are absolute counts, but this count is also impacted by effort (e.g. the number of days and number of traps in the study each year). What would you suggest be done moving forward (you are not expected to actually do this) to standardize the juvenile hare population in future analyses?
-
-always provide age data. 
-age data only provided for 1120 out of 3197 observations, or 35% of total observations. of that with data only 378 juveniles counted (33.75% of those with data, 11.82% of total observations).
-
-
+In order to standardize the juvenile hare population in future analyses, age data should be a required variable to provide for all observations of trapped hares. Using this data set as is, future analyses could be standardized by first meeting with data set owners to confirm that declining age trend seen in graph aligns with actual field conditions observed (confirming there was no other factor that limited the accurate collection of hare age). Then, using a linear regression or other model to create a formula that predicts the overall trend in juvenile hare counts with time.
 
 ### Part 2: Juvenile Hare Weights
 
-Create a finalized data visualization (or visualizations) in which you compare **juvenile hare weights by sex and site (grid)** (ignore other variables). You should include groups where these variables are not recorded (`NA`). Include finalized figure captions below your visualization(s).
-
-```{r, fig.cap= "text here"}
+```{r, fig.cap= "<b> Figure 2. Hare weights by sex and site.</b> This graph visually compares juvenile hare weights by sex and site. Variables where sex is not recorded are included in the graph in the N/A column."}
 juv_hares_w <- hares %>% 
   select(sex, weight, grid)
 
@@ -110,18 +109,13 @@ ggplot(data= juv_hares_w, aes(x=sex,y=weight), na.rm= FALSE)+
   geom_count(aes(color=sex), na.rm=FALSE)+
   facet_wrap(~grid)+
   theme_minimal()+
+  theme(axis.text.x = element_text(family = "A"), plot.title = element_text(family = "A"), axis.title = element_text(family = "A")) +
   labs(x= "Sex", y= "Weight()")
 
 ## still need to refine this plot
 ```
 
-Then, in 2 - 3 sentences below your visualization(s) describe in text the main takeaways that you would want the audience to understand from your figures.
-
-Note: There are multiple ways to visualize these comparisons. We encourage you to think carefully then make decisions about how to visualize these comparisons, including:
-- Can I use faceting to simplify the comparisons into manageable pieces?
-- Am I showing the audience the data, summary statistics, or both?
-- Have I updated graph labels, headers in facets, etc. to make it as straightforward as possible for viewers?
-- Have I simplified and finalized my data visualization(s) to include components that are useful for the audience?
+Key takeaways from Figure 2 include the observation that the majority of juvenile hares across all ages range between approximately 750 and 1750 grams. The Bonrip site had the most juvenile hares recorded. Overall, there appears to be a wider spread of female juvenile weights than male juvenile weights, especially at the Bonbs site.
 
 ### Part 3: Juvenile Weight Comparison
 
@@ -158,6 +152,8 @@ ggplot(data=juv_hares_w, aes(y=weight)) +
   facet_wrap(~grid)+
   theme_minimal()
 
+ggpairs(juv_hares_w)
+
 juv_hares_w_mf_ci <- t.test(juv_hares_w_mf$weight)
 juv_hares_w_mf_ci
 
@@ -189,7 +185,11 @@ ggplot(data=juv_hares_hft, aes(x=hindft, y=weight))+
 Upon seeing your graph, your “boss” tells you to try out linear regression to describe how juvenile snowshoe hare weight changes with respect to hind foot length. Try it out (the only variables you are expected to include here are hind foot length and weight, using data for all juvenile hares in the data, e.g. you are not expected to explore impacts of sex, site, etc.), and check the model diagnostics.
 
 ```{r}
+juv_hares_hft_lm <- lm(weight ~ hindft, data = juv_hares_hft)
 
+juv_hares_hft_lm
+
+plot(juv_hares_hft_lm)
 ```
 
 
@@ -202,5 +202,6 @@ ADD ___ Include a very short summary describing your main findings from your juv
 ## Citations
 
 Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14
+
 
 ADD ___ any other resources that were references in your mini report.
