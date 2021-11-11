@@ -29,21 +29,17 @@ basic background information about the subject, site and study (with citations a
 
 ## Data and Analysis
 
-Bonanza Creek LTER is part of the US Long Term Ecological Research (LTER) Network. 
+The Bonanza Creek LTER is part of the US Long Term Ecological Research (LTER) Network. Per the Metadata provided by the LTER team:
 
-Data citation: Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14
-
-ADD ___ provide an overview of the main analysis, statistical methods and tools used.
-
-Per the Metadata provided by the LTER team:
-
--weight (g)
--hindfoot length (unit not provided)
-
-And, there are three sampling sites:
+- weight (g)
+- hindfoot length (unit not provided)
 - Site A (bonrip in original data set): Located in a flood zone along the Tanana River and Bonanza Mature is a mature black spruce forest approximately 1 km inland from the river and 2 km from the riparian plot. 
 - Site B (bonmat in original data set): Consisted of stands of mature white spruce, paper birch and alder, as well as black spruce and other plants.
 - Site C (bonbs in original data set): Located in a mature lowland black spruce stand.
+
+Data wrangling, analyses, and visualizations in this report are completed using R.
+
+See the *Citations section* at the end of this report for data source citation.
 
 ```{r}
 hares <- read_csv(here( "data","bonanza_hares.csv"))
@@ -103,7 +99,15 @@ In order to standardize the juvenile hare population in future analyses, age dat
 
 ```{r, fig.cap= "<b> Figure 2. Hare weights by sex and site.</b> This graph visually compares juvenile hare weights by sex and site. Variables where sex is not recorded are included in the graph in the N/A column."}
 juv_hares_w <- hares %>% 
-  select(sex, weight, grid)
+  select(sex, weight, grid) %>% 
+  mutate(sex= case_when(
+    sex == "f" ~ "Female", 
+    sex == "m" ~ "Male")) %>% 
+  mutate(grid= case_when(
+    grid == "bonrip" ~ "Site A", 
+    grid == "bonmat" ~ "Site B", 
+    grid == "bonbs" ~ "Site C"
+  ))
 
 ggplot(data= juv_hares_w, aes(x=sex,y=weight), na.rm= FALSE)+
   geom_count(aes(color=sex), na.rm=FALSE)+
@@ -115,17 +119,31 @@ ggplot(data= juv_hares_w, aes(x=sex,y=weight), na.rm= FALSE)+
 ## still need to refine this plot
 ```
 
-Key takeaways from Figure 2 include the observation that the majority of juvenile hares across all ages range between approximately 750 and 1750 grams. The Bonrip site had the most juvenile hares recorded. Overall, there appears to be a wider spread of female juvenile weights than male juvenile weights, especially at the Bonbs site.
+Key takeaways from Figure 2 include the observation that the majority of juvenile hares across all ages range between approximately 750 and 1750 grams. The Site A (Bonrip) had the most juvenile hares recorded. Overall, there appears to be a wider spread of female juvenile weights than male juvenile weights, especially at Site C (Bonbs).
 
 ### Part 3: Juvenile Weight Comparison
 
-Further compare mean weights for **juvenile male and female snowshoe hares** included in this study. 
-
-A finalized table containing the mean, standard deviation, and sample size for male and female juvenile snowshoe hares.
-
-*Table 1. Title.* Caption here
-
 ```{r}
+
+juv_hares_summary <- na.omit(juv_hares_w) %>% 
+  group_by(sex) %>% 
+  summarize(mean_hares = round(mean(weight),2), 
+            sd_hares = round(sd(weight),2),
+            sample_size = n())
+
+kable(juv_hares_summary, format= "html", padding= 2, col.names = c("Sex", "Mean (g)", "Std Deviation (g)", "Sample Size (count)"), caption= "Table 1. Summary Statistics of Male and Female Juvenile Snowshoe Hares recorded at the Bonanza Creek Experimental Forest in Alaska from 1998 - 2012") %>% 
+  kable_styling(bootstrap_options="striped")
+```
+
+
+```{r, exploratory, include = true}
+ggplot(data=juv_hares_w, aes(y=weight)) +
+  geom_histogram(aes(fill=sex), na.rm=FALSE)+
+  facet_wrap(~grid)+
+  theme_minimal()
+
+ggpairs(juv_hares_w)
+
 juv_hares_w_m <- juv_hares_w %>% 
   filter(sex =="m") %>% 
   filter(weight %in% c(0:3000)) %>% 
@@ -142,17 +160,6 @@ juv_hares_w_mf_t
 juv_hares_w_mf_cohen <-cohen.d(juv_hares_w_m, juv_hares_w_f)
 juv_hares_w_mf_cohen
 
-##do QQ graph & create table
-```
-
-
-```{r, exploratory, include = true}
-ggplot(data=juv_hares_w, aes(y=weight)) +
-  geom_histogram(aes(fill=sex), na.rm=FALSE)+
-  facet_wrap(~grid)+
-  theme_minimal()
-
-ggpairs(juv_hares_w)
 
 juv_hares_w_mf_ci <- t.test(juv_hares_w_mf$weight)
 juv_hares_w_mf_ci
@@ -162,7 +169,7 @@ juv_hares_w_mf_sd
 
 ```
 A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
-The actual difference in means
+The actual difference in means.
 Effect size (Cohen's *d*) (see effsize::cohen.d() example in the Lab 5 key)
 Outcome of an unpaired two-sample t-test
  
