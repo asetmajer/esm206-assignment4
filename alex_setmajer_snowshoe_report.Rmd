@@ -32,7 +32,7 @@ basic background information about the subject, site and study (with citations a
 The Bonanza Creek LTER is part of the US Long Term Ecological Research (LTER) Network. Per the Metadata provided by the LTER team:
 
 - weight (g)
-- hindfoot length (unit not provided)
+- hindfoot length (mm)
 - Site A (bonrip in original data set): Located in a flood zone along the Tanana River and Bonanza Mature is a mature black spruce forest approximately 1 km inland from the river and 2 km from the riparian plot. 
 - Site B (bonmat in original data set): Consisted of stands of mature white spruce, paper birch and alder, as well as black spruce and other plants.
 - Site C (bonbs in original data set): Located in a mature lowland black spruce stand.
@@ -58,25 +58,10 @@ hares_yr <- hares %>%
   mutate(date_new = mdy(date)) %>% 
   mutate(year_new = year(date_new))
 
-age_hares_yr <- hares_yr %>% 
-  group_by(year_new) %>% 
-  count(age) %>% 
-  filter(age == "a" | age == "j")
-
-total_age <- sum(age_hares_yr$n)
-
 juv_hares_yr <- hares_yr %>% 
   group_by(year_new) %>% 
   count(age) %>% 
   filter(age == "j")
-
-summary(juv_hares_yr)
-
-total_juv <- sum(juv_hares_yr$n)
-
-total_age/3197
-total_juv/total_age
-total_juv/3197
 
 windowsFonts(A = windowsFont("Verdana")) 
 
@@ -89,7 +74,6 @@ ggplot(data=juv_hares_yr, aes(x=year_new, y=n, )) +
   theme(axis.text.x = element_text(family = "A"), plot.title = element_text(family = "A"), axis.title = element_text(family = "A"))
  
 ```
-
 
 The key takeaway from Figure 1 is that there appears to be an overall trend of decreasing juvenile hare counts. While some years counted more juveniles than others, as time went on, 'high-count' years were still significantly lower than juvenile counts in the first couple years of data collected. The minimum number of juveniles counted  was 2 hares, the maximum number of juveniles was 126 hares. The mean count was approximately 32 juvenile hares, and the median was approximately 19 juvenile hares.
 
@@ -114,17 +98,15 @@ ggplot(data= juv_hares_w, aes(x=sex,y=weight), na.rm= FALSE)+
   facet_wrap(~grid)+
   theme_minimal()+
   theme(axis.text.x = element_text(family = "A"), plot.title = element_text(family = "A"), axis.title = element_text(family = "A")) +
-  labs(x= "Sex", y= "Weight()")
+  labs(x= "Sex", y= "Weight(g)", color = "Sex", size = "Count" )
 
-## still need to refine this plot
 ```
 
-Key takeaways from Figure 2 include the observation that the majority of juvenile hares across all ages range between approximately 750 and 1750 grams. The Site A (Bonrip) had the most juvenile hares recorded. Overall, there appears to be a wider spread of female juvenile weights than male juvenile weights, especially at Site C (Bonbs).
+Key takeaways from Figure 2 include the observation that the majority of juvenile hares across all ages range between approximately 750 and 1750 grams. Site A (Bonrip) had the most juvenile hares recorded. Overall, there appears to be a wider spread of female juvenile weights than male juvenile weights, especially at Site C (Bonbs).
 
 ### Part 3: Juvenile Weight Comparison
 
 ```{r}
-
 juv_hares_summary <- na.omit(juv_hares_w) %>% 
   group_by(sex) %>% 
   summarize(mean_hares = round(mean(weight),2), 
@@ -133,10 +115,11 @@ juv_hares_summary <- na.omit(juv_hares_w) %>%
 
 kable(juv_hares_summary, format= "html", padding= 2, col.names = c("Sex", "Mean (g)", "Std Deviation (g)", "Sample Size (count)"), caption= "Table 1. Summary Statistics of Male and Female Juvenile Snowshoe Hares recorded at the Bonanza Creek Experimental Forest in Alaska from 1998 - 2012") %>% 
   kable_styling(bootstrap_options="striped")
+
 ```
 
 
-```{r, exploratory, include = true}
+```{r, exploratory, include= FALSE}
 ggplot(data=juv_hares_w, aes(y=weight)) +
   geom_histogram(aes(fill=sex), na.rm=FALSE)+
   facet_wrap(~grid)+
@@ -144,52 +127,47 @@ ggplot(data=juv_hares_w, aes(y=weight)) +
 
 ggpairs(juv_hares_w)
 
-juv_hares_w_m <- juv_hares_w %>% 
-  filter(sex =="m") %>% 
-  filter(weight %in% c(0:3000)) %>% 
+juv_hares_w_m <- na.omit(juv_hares_w) %>% 
+  filter(sex =="Male") %>% 
   pull(weight)
 
-juv_hares_w_f <- juv_hares_w %>% 
-  filter(sex == "f") %>% 
-  filter(weight %in% c(0:3000)) %>% 
+juv_hares_w_f <- na.omit(juv_hares_w) %>% 
+  filter(sex == "Female") %>% 
   pull(weight)
+```
 
+```{r, include= FALSE}
 juv_hares_w_mf_t <- t.test(juv_hares_w_m, juv_hares_w_f)
 juv_hares_w_mf_t
 
 juv_hares_w_mf_cohen <-cohen.d(juv_hares_w_m, juv_hares_w_f)
 juv_hares_w_mf_cohen
 
-
-juv_hares_w_mf_ci <- t.test(juv_hares_w_mf$weight)
-juv_hares_w_mf_ci
-
-juv_hares_w_mf_sd <- sd(juv_hares_w_mf$weight)
-juv_hares_w_mf_sd
-
 ```
-A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
-The actual difference in means.
-Effect size (Cohen's *d*) (see effsize::cohen.d() example in the Lab 5 key)
-Outcome of an unpaired two-sample t-test
- 
-Note: Exploratory graphs (e.g. histograms, QQ-plots) to explore assumptions of your t-test should not show up in your final knitted document, but you DO still need to create and think about them to determine whether a t-test is appropriate. If you want keep the code chunk containing those exploratory visualizations in your .Rmd but not appear in the knitted doc, you can add `include = FALSE` in the code chunk header.
 
+Mean weight for juvenile female hares (`r round(juv_hares_w_mf_t$estimate[2],2)` g) is greater than that for juvenile male hares (`r round(juv_hares_w_mf_t$estimate[1],2)`g); the effect size is negligible (Cohen's *d* = `r round(juv_hares_w_mf_cohen$estimate,2)`) and the difference insignificant (two-sample t-test, t = `r round(juv_hares_w_mf_t$statistic,2)`, p =0.39).
+
+ 
 ### Part 4: Relationship between Juvenile Weight & Hind Foot Length
 
-Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
-
-```{r, fig.cap = "text"}
+```{r, fig.cap = "<b> Figure 3. Juvenile Hare Weight & Hind Foot Length. </b> This graph explores the relationship between juvenile snowshoe hare hind foot length(mm) and weight(g)."}
 juv_hares_hft <- hares %>% 
-  select(weight, hindft, grid)
+  select(weight, hindft, grid) %>% 
+  mutate(grid= case_when(
+    grid == "bonrip" ~ "Site A", 
+    grid == "bonmat" ~ "Site B", 
+    grid == "bonbs" ~ "Site C"
+  ))
 
 ggplot(data=juv_hares_hft, aes(x=hindft, y=weight))+
-  geom_point(aes(color=grid))
+  geom_point(aes(color=grid)) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(family = "A"), plot.title = element_text(family = "A"), axis.title = element_text(family = "A")) +
+  labs(x= "Hind Foot Length(mm)", y= "Weight(g)", color = "Site")
 
 ```
 
 #### Linear Regression: Juvenile Hare Weight to Hind Foot Length
-Upon seeing your graph, your “boss” tells you to try out linear regression to describe how juvenile snowshoe hare weight changes with respect to hind foot length. Try it out (the only variables you are expected to include here are hind foot length and weight, using data for all juvenile hares in the data, e.g. you are not expected to explore impacts of sex, site, etc.), and check the model diagnostics.
 
 ```{r}
 juv_hares_hft_lm <- lm(weight ~ hindft, data = juv_hares_hft)
@@ -209,6 +187,3 @@ ADD ___ Include a very short summary describing your main findings from your juv
 ## Citations
 
 Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14
-
-
-ADD ___ any other resources that were references in your mini report.
