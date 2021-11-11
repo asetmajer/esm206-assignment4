@@ -25,8 +25,6 @@ library(broom)
 
 This report explores the counts and sizes of juvenile snowshoe hares recorded at the Bonanza Creek Experimental Forest in Alaska from 1998 - 2012. It includes summaries on annual juvenile hare counts, juvenile hare weights, and explores the relationship between juvenile weight and hind foot length.
 
-basic background information about the subject, site and study (with citations as needed)
-
 ## Data and Analysis
 
 The Bonanza Creek LTER is part of the US Long Term Ecological Research (LTER) Network. Per the Metadata provided by the LTER team:
@@ -169,20 +167,37 @@ ggplot(data=juv_hares_hft, aes(x=hindft, y=weight))+
 
 #### Linear Regression: Juvenile Hare Weight to Hind Foot Length
 
-```{r}
+```{r, include = FALSE}
 juv_hares_hft_lm <- lm(weight ~ hindft, data = juv_hares_hft)
 
 juv_hares_hft_lm
 
 plot(juv_hares_hft_lm)
+
+summary(juv_hares_hft_lm)
+
+cor.test(juv_hares_hft$weight, juv_hares_hft$hindft)
 ```
 
+The slope of the linear regression comparing possible correlations between juvenile hare weight(g) and hind foot length(mm) is described by the following equation:
+weight(g) = 11.79(hind foot length(mm))-230.5
 
-In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you?
+From this equation, we would gather that on average, we expect juvenile hare weight to increase by 11.79 grams for each 1 mm increase in hind foot length. 
+
+The R-squared value for this linear regression is 0.25, meaning that 25% of variance in hare weight can be explained by the hind foot length.
+
+Pearson's R for this linear regression is 0.5, indicating a medium positive correlation between the two variables.
+
+Linear regressions assume residuals are normally distributed, however the residuals for this analysis appear to be negatively distributed (skewed to the right). This means that the model requires further investigation to determine that correlating hind foot length and weight is appropriate for juvenile Snowshoe Hares.
 
 ## Summary
 
-ADD ___ Include a very short summary describing your main findings from your juvenile hares exploration (bullet points are fine)
+Key findings from this exploratory report focused on Juvenile Snowshoe Hares are:
+
+- There appears to be an overall trend of decreasing juvenile hare counts over time.
+- The majority of juvenile hares across all ages range between approximately 750 and 1750 grams.
+- Mean weight for juvenile female hares (`r round(juv_hares_w_mf_t$estimate[2],2)` g) is greater than that for juvenile male hares (`r round(juv_hares_w_mf_t$estimate[1],2)`g).
+- If hare weight is dependent on/correlates with hind foot length, we would gather that on average, we expect juvenile hare weight to increase by 11.79 grams for each 1 mm increase in hind foot length. However, more exploration is necessary to confirm correlation between these two variables.
 
 ## Citations
 
